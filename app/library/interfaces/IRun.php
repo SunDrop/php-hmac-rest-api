@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Interface for Running 
+ * Interface for Running
  *
  * @category Interfaces
  * @package Interfaces
@@ -12,10 +12,11 @@
 
 namespace Interfaces;
 
-interface IRun {
+interface IRun
+{
 
-	/**
-	 * Main method to run the object
-	 */
-	public function run();
+    /**
+     * Main method to run the object
+     */
+    public function run();
 }

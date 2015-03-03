@@ -4,75 +4,81 @@
  * Capture PHP related warnings/errors
  *
  * @package Utilities
- * @author Jete O'Keeffe 
+ * @author Jete O'Keeffe
  * @version 1.0
  * @link
  */
 
 namespace Utilities\Debug;
 
-class PhpError {
+class PhpError
+{
 
+    /**
+     * Record any warnings/errors by php
+     *
+     * @param int        php error number
+     * @param string    php error description
+     * @param string    php file where the error occured
+     * @param int        php line where the error occured
+     */
+    public static function errorHandler($errNo, $errStr, $errFile, $errLine)
+    {
 
-	/**
-	 * Record any warnings/errors by php
-	 *
-	 * @param int		php error number
-	 * @param string	php error description
-	 * @param string	php file where the error occured
-	 * @param int		php line where the error occured
-	 */
-	public static function errorHandler($errNo, $errStr, $errFile, $errLine) {
-
-		if ($errNo != E_STRICT) {
+        if ($errNo != E_STRICT) {
             //self::logToDb($errNo, $errStr, $errFile, $errLine);
             self::logToSyslog($errNo, $errStr, $errFile, $errLine);
-		}
-	}
+        }
+    }
 
-	/**
-	 * Capture any errors at the end script (especially runtime errors)
-	 */
-	public static function runtimeShutdown() {
-		$e = error_get_last();
-		if (!empty($e)) {
-			// Record Error
-			PhpError::errorHandler($e['type'], $e['message'], $e['file'], $e['line']);
-		}
-	}
+    /**
+     * Capture any errors at the end script (especially runtime errors)
+     */
+    public static function runtimeShutdown()
+    {
+        $e = error_get_last();
+        if (!empty($e)) {
+            // Record Error
+            PhpError::errorHandler($e['type'], $e['message'], $e['file'], $e['line']);
+        }
+    }
 
     /**
      * Log error to syslog
      *
-	 * @param int		php error number
-	 * @param string	php error description
-	 * @param string	php file where the error occured
-	 * @param int		php line where the error occured
+     * @param int        php error number
+     * @param string    php error description
+     * @param string    php file where the error occured
+     * @param int        php line where the error occured
      * @return bool
      */
-    public static function logToSyslog($errNo, $errStr, $errFile, $errLine) {
+    public static function logToSyslog($errNo, $errStr, $errFile, $errLine)
+    {
         $msg = sprintf("%s (errno: %d) in %s:%d", $errStr, $errNo, $errFile, $errLine);
 
         if (openlog("php-errors", LOG_PID | LOG_PERROR, LOG_SYSLOG)) {
             syslog(LOG_ERR, $msg);
+
             return closelog();
         }
-        return FALSE;
+
+        return false;
     }
 
     /**
      * Log error to database
      *
-	 * @param int		php error number
-	 * @param string	php error description
-	 * @param string	php file where the error occured
-	 * @param int		php line where the error occured
+     * @param int        php error number
+     * @param string    php error description
+     * @param string    php file where the error occured
+     * @param int        php line where the error occured
      * @return bool
      */
-    public static function logToDb($errNo, $errStr, $errFile, $errLine) {
+    public static function logToDb($errNo, $errStr, $errFile, $errLine)
+    {
 
         // Get Remote Ip or CLI script?
-        if (PHP_SAPI == 'cli') {  
+        if (PHP_SAPI == 'cli') {
             $script = $_SERVER['PHP_SELF'];
             $ip = 'CLI';
         } else {
@@ -81,7 +87,7 @@ class PhpError {
             $ip = $_SERVER['REMOTE_ADDR'];
         }
 
-        $rt = new \Models\RuntimeError();	
+        $rt = new \Models\RuntimeError();
         $rt->title = $errStr;
         $rt->file = $errFile;
         $rt->line = $errLine;
@@ -90,6 +96,7 @@ class PhpError {
         $rt->execution_script = $script;
         $rt->pid = getmypid();
         $rt->ip_address = $ip;
+
         return $rt->save();
     }
 }

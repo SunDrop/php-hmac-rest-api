@@ -2,7 +2,8 @@
 
 namespace Interfaces;
 
-interface IEvent {
+interface IEvent
+{
 
-	public function handleEvent();
+    public function handleEvent();
 }
